@@ -1,7 +1,30 @@
 import streamlit as st
 import re
+import json
+from datetime import datetime
+
 from llm import generate_response
 from prompts import technical_questions_prompt
+
+# -----------------------------
+# Persist Candidate Data
+# -----------------------------
+def save_candidate(candidate: dict):
+    record = {
+        **candidate,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    try:
+        with open("candidates.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = []
+
+    data.append(record)
+
+    with open("candidates.json", "w") as f:
+        json.dump(data, f, indent=2)
 
 # -----------------------------
 # Page Configuration
@@ -33,7 +56,7 @@ def is_valid_experience(exp: str) -> bool:
         return False
 
 # -----------------------------
-# Initialize State
+# Initialize Session State
 # -----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -56,9 +79,8 @@ if "candidate" not in st.session_state:
 # Stage Prompts
 # -----------------------------
 stage_prompts = {
-    "name": "Hello! 👋 Welcome to TalentScout.\n\nWhat is your **full name**?",
     "email": "Thanks! What is your **email address**?",
-    "phone": "Please share your **phone number** (digits only).",
+    "phone": "Please share your **phone number** (10–15 digits).",
     "experience": "How many **years of experience** do you have?",
     "position": "What **position(s)** are you applying for?",
     "location": "Where is your **current location**?",
@@ -69,22 +91,21 @@ stage_prompts = {
 }
 
 # -----------------------------
-# Initial Assistant Message
+# Initial Greeting (ONCE)
 # -----------------------------
 if len(st.session_state.messages) == 0:
     st.session_state.messages.append({
         "role": "assistant",
         "content": (
             "Hello! 👋 Welcome to **TalentScout**, your AI-powered hiring assistant.\n\n"
-            "I’ll help with the **initial screening process** by collecting some basic information "
-            "and then asking a few **technical questions based on your tech stack**.\n\n"
-            "Let’s get started.\n\n"
+            "I’ll help with the **initial screening process** by collecting a few details "
+            "and then asking **technical questions based on your tech stack**.\n\n"
             "👉 What is your **full name**?"
         )
     })
 
 # -----------------------------
-# Display Chat
+# Display Chat History
 # -----------------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -101,40 +122,31 @@ if user_input:
     # Exit Handling
     # -------------------------
     if any(k in user_input.lower() for k in EXIT_KEYWORDS):
-        st.session_state.messages.append(
-            {"role": "user", "content": user_input}
-        )
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": (
-                    "🙏 Thank you for your time!\n\n"
-                    "Your information has been recorded successfully.\n"
-                    "Our recruitment team will reach out if your profile matches.\n\n"
-                    "Have a great day!"
-                )
-            }
-        )
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": (
+                "🙏 Thank you for your time!\n\n"
+                "Your information has been recorded successfully.\n"
+                "Our recruitment team will reach out if your profile matches.\n\n"
+                "Have a great day!"
+            )
+        })
         st.session_state.stage = "completed"
         st.rerun()
 
-    # Prevent input after completion
     if st.session_state.stage == "completed":
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": "✅ This conversation has already been completed."
-            }
-        )
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": "✅ This conversation has already been completed."
+        })
         st.rerun()
 
-    # Append USER message ONCE
-    st.session_state.messages.append(
-        {"role": "user", "content": user_input}
-    )
+    # Append user message
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
     # -----------------------------
-    # Conversation Flow WITH VALIDATION
+    # Conversation Flow
     # -----------------------------
     if st.session_state.stage == "name":
         st.session_state.candidate["name"] = user_input
@@ -151,7 +163,7 @@ if user_input:
 
     elif st.session_state.stage == "phone":
         if not is_valid_phone(user_input):
-            reply = "⚠️ Please enter a valid phone number (10–15 digits only)."
+            reply = "⚠️ Please enter a valid phone number (digits only)."
         else:
             st.session_state.candidate["phone"] = user_input
             st.session_state.stage = "experience"
@@ -159,7 +171,7 @@ if user_input:
 
     elif st.session_state.stage == "experience":
         if not is_valid_experience(user_input):
-            reply = "⚠️ Please enter years of experience as a number (e.g., 2 or 3.5)."
+            reply = "⚠️ Please enter experience as a number (e.g., 2 or 3.5)."
         else:
             st.session_state.candidate["experience"] = user_input
             st.session_state.stage = "position"
@@ -182,6 +194,9 @@ if user_input:
             prompt = technical_questions_prompt(user_input)
             questions = generate_response(prompt)
 
+        # ✅ Save candidate data HERE
+        save_candidate(st.session_state.candidate)
+
         reply = (
             "🧠 **Technical Questions Based on Your Tech Stack:**\n\n"
             f"{questions}\n\n"
@@ -194,11 +209,6 @@ if user_input:
     else:
         reply = "Thank you."
 
-    # -----------------------------
-    # Assistant Reply
-    # -----------------------------
-    st.session_state.messages.append(
-        {"role": "assistant", "content": reply}
-    )
-
+    # Append assistant reply
+    st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
