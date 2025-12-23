@@ -11,7 +11,7 @@ The application is built using **Python and Streamlit** and can be run locally o
 ---
 
 ## ✨ Key Features & Capabilities
-
+- **Live Link for the project** - https://talentscout-chatbot-du9gmhmbbfkr5fss4n3g4p.streamlit.app/
 - 👋 **Automated Greeting & Purpose Explanation**
   - Welcomes candidates and clearly explains the screening process.
 
