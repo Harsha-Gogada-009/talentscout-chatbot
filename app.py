@@ -40,24 +40,66 @@ st.set_page_config(
 # -----------------------------
 st.markdown("""
 <style>
+/* ---------- GLOBAL ---------- */
 .stApp {
     background-color: #f9fafb;
+    color: #111827;
 }
 
+/* ---------- HEADER ---------- */
 .header-box {
-    background: white;
+    background-color: #ffffff;
+    color: #111827;
     padding: 1.5rem;
     border-radius: 14px;
     border: 1px solid #e5e7eb;
     margin-bottom: 1.5rem;
 }
 
-.chat-note {
-    color: #6b7280;
-    font-size: 0.9rem;
+.header-box h2 {
+    color: #111827;
+}
+
+.header-box p {
+    color: #4b5563;
+}
+
+/* ---------- CHAT ---------- */
+[data-testid="stChatMessage"] {
+    color: #111827;
+}
+
+[data-testid="stChatMessage"][aria-label="assistant"] {
+    background-color: #f3f4f6;
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+[data-testid="stChatMessage"][aria-label="user"] {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+/* ---------- SIDEBAR ---------- */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+    color: #f9fafb;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #f9fafb !important;
+}
+
+/* ---------- INPUT ---------- */
+textarea, input {
+    background-color: #ffffff !important;
+    color: #111827 !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # -----------------------------
 # Header
