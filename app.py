@@ -40,6 +40,7 @@ st.set_page_config(
 # -----------------------------
 st.markdown("""
 <style>
+
 /* ---------- GLOBAL ---------- */
 .stApp {
     background-color: #f9fafb;
@@ -64,28 +65,42 @@ st.markdown("""
     color: #4b5563;
 }
 
-/* ---------- CHAT ---------- */
+/* ---------- CHAT MESSAGE FIX (CRITICAL) ---------- */
 [data-testid="stChatMessage"] {
-    color: #111827;
+    background-color: transparent !important;
+    color: #111827 !important;
 }
 
-[data-testid="stChatMessage"][aria-label="assistant"] {
-    background-color: #f3f4f6;
-    border-radius: 12px;
-    padding: 0.75rem;
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] span,
+[data-testid="stChatMessage"] div {
+    color: #111827 !important;
+    font-size: 1rem;
 }
 
-[data-testid="stChatMessage"][aria-label="user"] {
-    background-color: #2563eb;
-    color: white;
+/* Assistant bubble */
+[data-testid="stChatMessage"]:has(svg) {
+    background-color: #f3f4f6 !important;
+    padding: 1rem;
     border-radius: 12px;
-    padding: 0.75rem;
+    margin-bottom: 0.75rem;
 }
+
+/* User bubble */
+[data-testid="stChatMessage"] {
+    padding: 1rem !important;
+    border-radius: 12px !important;
+    margin-bottom: 0.75rem !important;
+}
+
+[data-testid="stChatMessage"] p {
+    color: #111827 !important;
+}
+
 
 /* ---------- SIDEBAR ---------- */
 section[data-testid="stSidebar"] {
     background-color: #111827;
-    color: #f9fafb;
 }
 
 section[data-testid="stSidebar"] * {
@@ -93,10 +108,15 @@ section[data-testid="stSidebar"] * {
 }
 
 /* ---------- INPUT ---------- */
+/* ---------- INPUT ---------- */
 textarea, input {
     background-color: #ffffff !important;
     color: #111827 !important;
+    caret-color: #111827 !important;
+    border: 1px solid #d1d5db !important;
 }
+
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -198,10 +218,10 @@ if len(st.session_state.messages) == 0:
 # -----------------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if msg["role"] == "user":
-            st.markdown(f"**You:** {msg['content']}")
-        else:
-            st.markdown(msg["content"])
+        st.markdown(
+            msg["content"],
+            unsafe_allow_html=True
+        )
 
 # -----------------------------
 # User Input
