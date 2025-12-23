@@ -35,8 +35,41 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🤖 TalentScout Hiring Assistant")
-st.caption("AI assistant for initial candidate screening")
+# -----------------------------
+# Custom CSS (Safe for Streamlit Cloud)
+# -----------------------------
+st.markdown("""
+<style>
+.stApp {
+    background-color: #f9fafb;
+}
+
+.header-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+}
+
+.chat-note {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# Header
+# -----------------------------
+st.markdown("""
+<div class="header-box">
+    <h2>🤖 TalentScout Hiring Assistant</h2>
+    <p class="chat-note">
+        AI-powered chatbot for initial candidate screening and technical assessment
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 EXIT_KEYWORDS = ["exit", "quit", "bye", "thank you", "thanks"]
 
@@ -76,6 +109,20 @@ if "candidate" not in st.session_state:
     }
 
 # -----------------------------
+# Sidebar (Progress + Info)
+# -----------------------------
+with st.sidebar:
+    st.markdown("### 📋 Screening Progress")
+    st.write(f"**Current Stage:** {st.session_state.stage.capitalize()}")
+
+    st.markdown("---")
+    st.markdown("### ℹ️ About")
+    st.write(
+        "TalentScout uses AI to assist recruiters with "
+        "initial candidate screening in a structured and fair way."
+    )
+
+# -----------------------------
 # Stage Prompts
 # -----------------------------
 stage_prompts = {
@@ -109,7 +156,10 @@ if len(st.session_state.messages) == 0:
 # -----------------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+        if msg["role"] == "user":
+            st.markdown(f"**You:** {msg['content']}")
+        else:
+            st.markdown(msg["content"])
 
 # -----------------------------
 # User Input
@@ -118,9 +168,7 @@ user_input = st.chat_input("Type your answer here...")
 
 if user_input:
 
-    # -------------------------
-    # Exit Handling
-    # -------------------------
+    # Exit handling
     if any(k in user_input.lower() for k in EXIT_KEYWORDS):
         st.session_state.messages.append({"role": "user", "content": user_input})
         st.session_state.messages.append({
@@ -142,7 +190,6 @@ if user_input:
         })
         st.rerun()
 
-    # Append user message
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # -----------------------------
@@ -194,7 +241,6 @@ if user_input:
             prompt = technical_questions_prompt(user_input)
             questions = generate_response(prompt)
 
-        # ✅ Save candidate data HERE
         save_candidate(st.session_state.candidate)
 
         reply = (
@@ -209,6 +255,5 @@ if user_input:
     else:
         reply = "Thank you."
 
-    # Append assistant reply
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
